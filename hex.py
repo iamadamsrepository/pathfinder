@@ -1,9 +1,9 @@
 import sys, pygame, time, math
 
 # Number of hexagons on each axis
-n_x, n_y = 20, 20
+n_x, n_y = 80,50
 # Radius of and gap between hexagons
-r, g = 20, 5
+r, g = 8,3
 
 width = int(n_x*(1.5*r+g)+0.5*r+g)+160
 height = int(n_y*(2*0.866*r+g)+0.866*r+2*g)
@@ -223,6 +223,7 @@ if __name__ == '__main__':
     route = []
     hover_prev = None
     hover_prev_colour = white
+    mouse_down = False
     while True:
         hover = get_hex_under_mouse()
         if hover != hover_prev:
@@ -238,33 +239,38 @@ if __name__ == '__main__':
             if hover in route:
                 hover_prev_colour = red
 
+        if mouse_down:
+            if hover is not None:
+                if buttons.current == white:
+                    if graph.nodes[hover]:
+                        graph.remove_hex_edges(*hover)
+                        draw_hex(hover, black)
+                    else:
+                        graph.add_hex_edges(*hover)
+                        draw_hex(hover, white)
+                elif buttons.current == green:
+                    draw_hex(buttons.start_point, white)
+                    buttons.start_point = hover
+                    draw_hex(hover, green)
+                elif buttons.current == blue:
+                    draw_hex(buttons.end_point, white)
+                    buttons.end_point = hover
+                    draw_hex(hover, blue)
+            else:
+                x, y = pygame.mouse.get_pos()
+                if width - 130 <= x <= width - 30:
+                    route = buttons.press(y)
+                    if route is None:
+                        route = [] 
+                    else:
+                        for node in route:
+                            draw_hex(node, red)
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT: sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN: 
-                if hover is not None:
-                    if buttons.current == white:
-                        if graph.nodes[hover]:
-                            graph.remove_hex_edges(*hover)
-                            draw_hex(hover, black)
-                        else:
-                            graph.add_hex_edges(*hover)
-                            draw_hex(hover, white)
-                    elif buttons.current == green:
-                        draw_hex(buttons.start_point, white)
-                        buttons.start_point = hover
-                        draw_hex(hover, green)
-                    elif buttons.current == blue:
-                        draw_hex(buttons.end_point, white)
-                        buttons.end_point = hover
-                        draw_hex(hover, blue)
-                else:
-                    x, y = pygame.mouse.get_pos()
-                    if width - 130 <= x <= width - 30:
-                        route = buttons.press(y)
-                        if route is None:
-                            route = [] 
-                        else:
-                            for node in route:
-                                draw_hex(node, red)
+                mouse_down = True
+            if event.type == pygame.MOUSEBUTTONUP:
+                mouse_down = False
         
         pygame.display.flip()
