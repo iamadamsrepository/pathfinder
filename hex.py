@@ -66,7 +66,8 @@ class HexGraph:
 
     def remove_hex_edges(self, x, y):
         for node in self.edges[(x,y)]:
-            self.edges[node].remove((x,y))
+            if (x,y) in self.edges[node]:
+                self.edges[node].remove((x,y))
         self.nodes[(x,y)] = False
         self.edges[(x,y)] = []
 
@@ -140,7 +141,7 @@ class Buttons:
             self.current = blue
             self.draw()
         if 245 <= y <= 275:
-            return 'reset'
+            self.reset()
         
     def route(self):
         if self.start_point is None or self.end_point is None:
@@ -154,7 +155,16 @@ class Buttons:
             screen.blit(pygame.font.SysFont(None, 16).render(
                 'No Route Available', True, red), (width-120, 70))
             return
+        screen.blit(pygame.font.SysFont(None, 16).render(
+            f'Length: {len(route)}', True, red), (width-120, 70))
         return route
+
+    def reset(self):
+        self.__init__(graph)
+        graph.__init__()
+        for i in range(n_x):
+            for j in range(n_y):
+                draw_hex((i, j), white)
 
 
 def draw_hex_from_coords(centre, colour):
@@ -233,8 +243,12 @@ if __name__ == '__main__':
             if event.type == pygame.MOUSEBUTTONDOWN: 
                 if hover is not None:
                     if buttons.current == white:
-                        graph.remove_hex_edges(*hover)
-                        draw_hex(hover, black)
+                        if graph.nodes[hover]:
+                            graph.remove_hex_edges(*hover)
+                            draw_hex(hover, black)
+                        else:
+                            graph.add_hex_edges(*hover)
+                            draw_hex(hover, white)
                     elif buttons.current == green:
                         draw_hex(buttons.start_point, white)
                         buttons.start_point = hover
